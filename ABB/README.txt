@@ -1,0 +1,3 @@
+O trabalho foi feito em C++11, e no DEV-C++, portanto para configurar é necessário seguir as seguintes instruções:  Tools >> Compiler Options >> (select your compiler) >> Settings >> Code Generation >> (set 'Language standard' to a C++11 option)
+
+Meu algoritmo recebe dois arquivos como parâmetros. O primeiro "arvore.txt" contém uma sequência de valores inteiros separados por um espaço, os valores a serem armazenados na árvore. O segundo arquivo "operacoes.txt" contém uma sequência de operações (uma operação por linha) a serem realizadas pelo meu algoritmo
