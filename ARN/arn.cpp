@@ -19,6 +19,7 @@ typedef struct no_arvore{								//Estrutura que representa um nó de uma árvore
 	int altura_nos_pretos;
 	int nos_pretos_esquerda;
     struct no_arvore *dir;
+    struct no_arvore *pai;
 }No_arvore;	
 
 //PILHA
@@ -103,27 +104,94 @@ int desenfileirar(Fila<Tipo> *fila, Tipo *num){			//Função que desenfileira um n
 }
 
 //ÁRVORE
-
-void rotacao_direita(No_arvore *&no){
+void rotacao_direita(No_arvore *no){
 	if(no){
 		if(no->esq){
-			No_arvore *aux = new No_arvore;
-			aux = no->esq;
+			No_arvore *aux = no->esq;
 			no->esq = aux->dir;
+			if(aux->dir)
+				aux->dir->pai = no;
+			aux->pai = no->pai;
+			if(no->pai){
+				if(no->pai->esq == no)
+					no->pai->esq = aux;
+				else
+					no->pai->dir = aux;
+			}
 			aux->dir = no;
 			no = aux;
 		}
 	}
 }
 
-void rotacao_esquerda(No_arvore *&no){
+void rotacao_esquerda(No_arvore *no){
 	if(no){
 		if(no->dir){
-			No_arvore *aux = new No_arvore;
-			aux = no->dir;
+			No_arvore *aux = no->dir;
 			no->dir = aux->esq;
+			if(aux->esq)
+				aux->esq->pai = no;
+			aux->pai = no->pai;
+			if(no->pai){
+				if(no->pai->esq == no)
+					no->pai->esq = aux;
+				else
+					no->pai->dir = aux;
+			}
 			aux->esq = no;
 			no = aux;
+		}
+	}
+}
+
+void reparacao(No_arvore *&no){
+	No_arvore *x = no;
+	if(x->pai){
+		if(x->pai->pai){
+			while(x->pai->cor == 'V'){
+				if(x->pai == x->pai->pai->esq){			//Pai a esquerda do avô
+					if(x->pai->pai->dir && x->pai->pai->dir->cor == 'V'){	//Caso 1
+						x->pai->pai->dir->cor = 'P';
+						x->pai->cor = 'P';
+						x->pai->pai->cor = 'V';
+						x = x->pai->pai;
+					}
+					else{
+						if(x == x->pai->dir){			//Caso 2
+							rotacao_esquerda(x->pai);
+							x = x->esq;
+						}
+						else{							//Caso 3
+							rotacao_direita(x->pai->pai);
+							x->pai->cor = 'P';
+							x->pai->dir->cor = 'V';
+						}
+					}
+				}
+				else{									//Pai a direita do avô
+					if(x->pai->pai->esq && x->pai->pai->esq->cor == 'V'){	//Caso 1
+						x->pai->pai->esq->cor = 'P';
+						x->pai->cor = 'P';
+						x->pai->pai->cor = 'V';
+						x = x->pai->pai;
+					}
+					else{
+						if(x == x->pai->dir){			//Caso 2
+							rotacao_direita(x->pai);
+							x = x->dir;
+						}
+						else{							//Caso 3
+							rotacao_esquerda(x->pai->pai);
+							x->pai->cor = 'P';
+							x->pai->esq->cor = 'V';
+						}
+					}
+				}
+				if(!x->pai){
+					x->cor = 'P';
+					break;
+				}
+			}
 		}
 	}
 }
@@ -213,16 +281,24 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 		pt1->chave = x;
 		pt1->dir = NULL;
 		pt1->esq = NULL;
+		pt1->pai = NULL;
 		pt1->nos_pretos_direita = 0;
 		pt1->nos_pretos_esquerda = 0;
 		pt1->altura_nos_pretos = 1;
-		pt1->cor = 'v';
-		if(f == 0)
+		pt1->cor = 'V';
+		if(f == 0){
+			pt1->cor = 'P';
 			pt_raiz = pt1;
-		else if(f == 2)
+		}
+		else if(f == 2){
+			pt1->pai = pt;
 			pt->esq = pt1;
-		else
+		}
+		else{
+			pt1->pai = pt;
 			pt->dir = pt1;
+		}
+		reparacao(pt1);
 	}
 }
 
@@ -231,7 +307,7 @@ string toString(No_arvore *pt_raiz){					//Função que retorna uma String que con
 	string resultado = "";
 	Fila<No_arvore*> *fila_nivel = criar_fila<No_arvore*>();
 	while(pt){
-		resultado = resultado + to_string(pt->chave) + " ";
+		resultado = resultado + to_string(pt->chave) + " " + pt->cor + " - ";
 		No_arvore *no_atual;
 		if(pt->esq) enfileirar<No_arvore*>(fila_nivel, pt->esq);
 		if(pt->dir) enfileirar<No_arvore*>(fila_nivel, pt->dir);
@@ -275,16 +351,16 @@ void construir_arvore(No_arvore *&pt_raiz){				//Função que constrói a ABB a por
 	Fila<int> *fila_insercao;
 	fila_insercao = ler_arvore();
 	int num;
-	while(desenfileirar(fila_insercao, &num))
+	while(desenfileirar(fila_insercao, &num)){
 		insercao(num, pt_raiz);
+		cout << toString(pt_raiz) << endl;
+	}
 }
 
 int main(){
 	No_arvore *pt_raiz = NULL;
 	construir_arvore(pt_raiz);
 	//executar_operacores(pt_raiz);
-	cout << toString(pt_raiz) << endl;
-	rotacao_esquerda(pt_raiz);
 	cout << toString(pt_raiz) << endl;
 	return 0;
 }
