@@ -95,6 +95,8 @@ int desenfileirar(Fila<Tipo> *fila, Tipo *num){			//Função que desenfileira um n
 		fila->inicio = aux->proximo;
 		delete aux;
 		fila->tamanho--;
+		if(fila->tamanho == 0)
+			fila->fim = NULL;
 		return 1;
 	}
 	return 0;
@@ -115,6 +117,15 @@ void rotacao_direita(No_arvore *&no){
 }
 
 void rotacao_esquerda(No_arvore *&no){
+	if(no){
+		if(no->dir){
+			No_arvore *aux = new No_arvore;
+			aux = no->dir;
+			no->dir = aux->esq;
+			aux->esq = no;
+			no = aux;
+		}
+	}
 }
 
 void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em uma árvore
@@ -273,7 +284,7 @@ int main(){
 	construir_arvore(pt_raiz);
 	//executar_operacores(pt_raiz);
 	cout << toString(pt_raiz) << endl;
-	rotacao_direita(pt_raiz);
+	rotacao_esquerda(pt_raiz);
 	cout << toString(pt_raiz) << endl;
 	return 0;
 }
