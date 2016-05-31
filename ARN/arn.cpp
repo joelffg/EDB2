@@ -198,36 +198,25 @@ void reparacao_remocao(No_arvore *&no, No_arvore *&pt_raiz){
 	while(z != pt_raiz && z->cor == 'P'){
 		if(z->chave < z->pai->chave){
 			No_arvore *w = z->pai->dir;
-			if(w->cor == 'V'){
+			if(w->cor == 'V'){														//Caso 1
 				w->cor = 'P';
 				z->pai->cor = 'V';
 				rotacao_esquerda(z->pai, pt_raiz);
 				w = z->pai->dir;
 			}
-			if((!w->esq || w->esq->cor == 'P') && (!w->dir || w->dir->cor == 'P')){
+			if((!w->esq || w->esq->cor == 'P') && (!w->dir || w->dir->cor == 'P')){	//Caso 2
 				w->cor = 'V';
 				z = z->pai;
 			}
-			else if(!w->dir || w->dir->cor == 'P'){
-				if(w->esq)
-					w->esq->cor = 'P';
-				w->cor = 'V';
-				rotacao_direita(w, pt_raiz);
-				w = z->pai->dir;
-				w->cor = z->pai->cor;
-				z->pai->cor = 'P';
-				if(w->dir)
-					w->dir->cor = 'P';
-				rotacao_esquerda(z->pai, pt_raiz);
-				z = pt_raiz;
-			}
 			else{
-				if(w->dir)
-					w->dir->cor = 'P';
-				w->cor = 'V';
-				rotacao_direita(w, pt_raiz);
-				w = z->pai->esq;
-				w->cor = z->pai->cor;
+				if(!w->dir || w->dir->cor == 'P'){									//Caso 3
+					if(w->esq)
+						w->esq->cor = 'P';
+					w->cor = 'V';
+					rotacao_direita(w, pt_raiz);
+					w = z->pai->dir;
+				}
+				w->cor = z->pai->cor;												//Caso 4
 				z->pai->cor = 'P';
 				if(w->dir)
 					w->dir->cor = 'P';
@@ -237,26 +226,28 @@ void reparacao_remocao(No_arvore *&no, No_arvore *&pt_raiz){
 		}
 		else{
 			No_arvore *w = z->pai->esq;
-			if(w->cor == 'V'){
+			if(w->cor == 'V'){														//Caso 1
 				w->cor = 'P';
 				z->pai->cor = 'V';
-				rotacao_direita(z->pai, pt_raiz);
+				rotacao_esquerda(z->pai, pt_raiz);
 				w = z->pai->esq;
 			}
-			if((!w->esq || w->esq->cor == 'P') && (!w->dir || w->dir->cor == 'P')){
+			if((!w->dir || w->dir->cor == 'P') && (!w->esq || w->esq->cor == 'P')){	//Caso 2
 				w->cor = 'V';
 				z = z->pai;
 			}
-			else if(w->esq->cor = 'P'){
-				if(w->dir)
-					w->esq->cor = 'P';
-				w->cor = 'V';
-				rotacao_direita(w, pt_raiz);
-				w = z->pai->esq;
-				w->cor = z->pai->cor;
+			else{
+				if(!w->esq || w->esq->cor == 'P'){									//Caso 3
+					if(w->dir)
+						w->dir->cor = 'P';
+					w->cor = 'V';
+					rotacao_direita(w, pt_raiz);
+					w = z->pai->esq;
+				}
+				w->cor = z->pai->cor;												//Caso 4
 				z->pai->cor = 'P';
-				if(w->dir)
-					w->dir->cor = 'P';
+				if(w->esq)
+					w->esq->cor = 'P';
 				rotacao_esquerda(z->pai, pt_raiz);
 				z = pt_raiz;
 			}
@@ -505,16 +496,22 @@ void remocao(int x, No_arvore *&pt_raiz){				//Função que remove um elemento de 
 					pt1->dir = pt->dir;
 					pt->dir->pai = pt1;
 				}
-				if(f == 0)
-					pt_raiz = pt1;
-				else if(f == 2)
-					pai->esq = pt1;
-				else
-					pai->dir = pt1;
-				pt1->pai = pt->pai;
-				if(pt1->cor == 'P'){
-					reparacao_remocao(pt1, pt_raiz);
+				if(f == 0){
+					pt_raiz->chave = pt1->chave;
+					pt_raiz->dir = pt1->dir;
+					pt_raiz->esq = pt1->esq;
 				}
+				else if(f == 2){
+					pai->esq = pt1;
+					pt1->pai = pt->pai;
+				}
+				else{
+					pai->dir = pt1;
+					pt1->pai = pt->pai;
+				}
+				pt1->dir->pai = pt1;
+				if(pt1->cor == 'P')
+					reparacao_remocao(pt1, pt_raiz);
 				pt1->cor = pt->cor;
 			}
 		}
