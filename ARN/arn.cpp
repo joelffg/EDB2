@@ -208,12 +208,25 @@ void reparacao_remocao(No_arvore *&no, No_arvore *&pt_raiz){
 				w->cor = 'V';
 				z = z->pai;
 			}
-			else if(w->dir->cor = 'P'){
+			else if(!w->dir || w->dir->cor == 'P'){
 				if(w->esq)
 					w->esq->cor = 'P';
 				w->cor = 'V';
 				rotacao_direita(w, pt_raiz);
 				w = z->pai->dir;
+				w->cor = z->pai->cor;
+				z->pai->cor = 'P';
+				if(w->dir)
+					w->dir->cor = 'P';
+				rotacao_esquerda(z->pai, pt_raiz);
+				z = pt_raiz;
+			}
+			else{
+				if(w->dir)
+					w->dir->cor = 'P';
+				w->cor = 'V';
+				rotacao_direita(w, pt_raiz);
+				w = z->pai->esq;
 				w->cor = z->pai->cor;
 				z->pai->cor = 'P';
 				if(w->dir)
@@ -459,6 +472,7 @@ void remocao(int x, No_arvore *&pt_raiz){				//Função que remove um elemento de 
 					pai->esq = pt->dir;
 				else
 					pai->dir = pt->dir;
+				pt->dir->pai = pai;
 			}
 			if(pt->cor == 'P'){
 				reparacao_remocao(pt, pt_raiz);
@@ -472,7 +486,7 @@ void remocao(int x, No_arvore *&pt_raiz){				//Função que remove um elemento de 
 					pai->esq = pt->esq;
 				else
 					pai->dir = pt->esq;
-					
+				pt->esq->pai = pai;	
 				if(pt->cor == 'P'){
 					reparacao_remocao(pt, pt_raiz);
 				}
@@ -489,6 +503,7 @@ void remocao(int x, No_arvore *&pt_raiz){				//Função que remove um elemento de 
 				}
 				else{
 					pt1->dir = pt->dir;
+					pt->dir->pai = pt1;
 				}
 				if(f == 0)
 					pt_raiz = pt1;
@@ -496,7 +511,7 @@ void remocao(int x, No_arvore *&pt_raiz){				//Função que remove um elemento de 
 					pai->esq = pt1;
 				else
 					pai->dir = pt1;
-				
+				pt1->pai = pt->pai;
 				if(pt1->cor == 'P'){
 					reparacao_remocao(pt1, pt_raiz);
 				}
@@ -560,12 +575,34 @@ void construir_arvore(No_arvore *&pt_raiz){				//Função que constrói a ABB a por
 	}
 }
 
+void executar_operacores(No_arvore *&pt_raiz){			//Função que executa as operações que estão no arquivo contendo-as
+	Fila<string> *fila_operacoes;
+	fila_operacoes = ler_operacoes();
+	string operacao;
+	while(desenfileirar(fila_operacoes, &operacao)){
+		cout << "-----------" << operacao << "-------------" << endl;
+		if(operacao == "IMPRIMA"){
+			cout << toString(pt_raiz) << endl;
+		}
+		else{
+			int num, found, f = 0;
+    		found = operacao.find_first_of(" ");
+    		string comando = operacao.substr(0, found), str_num = operacao.substr(found+1);
+			num = stoi(str_num, nullptr, 10);
+			if(comando == "BUSCA")
+				cout << busca_arn(pt_raiz, num, &f) << endl;
+			else if(comando == "REMOVA")
+				remocao(num, pt_raiz);
+			else
+				cout << "Comando: '" << comando << "' inválido" << endl;
+		}
+		cout << "--------------------------------" << endl;
+	}
+}
+
 int main(){
 	No_arvore *pt_raiz = NULL;
 	construir_arvore(pt_raiz);
-	//executar_operacores(pt_raiz);
-	cout << toString(pt_raiz) << endl;
-	remocao(12, pt_raiz);
-	cout << toString(pt_raiz) << endl;
+	executar_operacores(pt_raiz);
 	return 0;
 }
