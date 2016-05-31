@@ -252,6 +252,33 @@ void reparacao_remocao(No_arvore *&no, No_arvore *&pt_raiz){
 	z->cor = 'P';
 }
 
+No_arvore* busca_arn(No_arvore *&pt, int x, int *f){
+	if(pt){
+		if(pt->chave == x){
+			*f = 1;
+			return pt;
+		}
+		else{
+			if(x < pt->chave){
+				if(!pt->esq)
+					*f = 2;
+				else
+					pt = pt->esq;
+			}
+			else{
+				if(!pt->dir)
+					*f = 3;
+				else
+					pt = pt->dir;
+			}
+			if(*f < 1)
+				busca_arn(pt, x, f);
+			else
+				return pt;
+		}
+	}
+}
+
 void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em uma árvore
 	int f;
 	No_arvore *pt = pt_raiz;
