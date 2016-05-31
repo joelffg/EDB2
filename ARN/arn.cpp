@@ -13,11 +13,8 @@ struct No{												//Estrutura que representa um nó de uma fila ou de uma pil
 
 typedef struct no_arvore{								//Estrutura que representa um nó de uma árvore
     struct no_arvore *esq;
-	int nos_pretos_direita;
 	int chave;
 	char cor;
-	int altura_nos_pretos;
-	int nos_pretos_esquerda;
     struct no_arvore *dir;
     struct no_arvore *pai;
 }No_arvore;	
@@ -104,7 +101,7 @@ int desenfileirar(Fila<Tipo> *fila, Tipo *num){			//Função que desenfileira um n
 }
 
 //ÁRVORE
-void rotacao_direita(No_arvore *no){
+void rotacao_direita(No_arvore *no, No_arvore *&pt_raiz){
 	if(no){
 		if(no->esq){
 			No_arvore *aux = no->esq;
@@ -112,19 +109,19 @@ void rotacao_direita(No_arvore *no){
 			if(aux->dir)
 				aux->dir->pai = no;
 			aux->pai = no->pai;
-			if(no->pai){
-				if(no->pai->esq == no)
-					no->pai->esq = aux;
-				else
-					no->pai->dir = aux;
-			}
+			if(!no->pai)
+				pt_raiz = aux;
+			else if(no->pai->esq == no)
+				no->pai->esq = aux;
+			else
+				no->pai->dir = aux;
 			aux->dir = no;
-			no = aux;
+			no->pai = aux;
 		}
 	}
 }
 
-void rotacao_esquerda(No_arvore *no){
+void rotacao_esquerda(No_arvore *no, No_arvore *&pt_raiz){
 	if(no){
 		if(no->dir){
 			No_arvore *aux = no->dir;
@@ -132,19 +129,19 @@ void rotacao_esquerda(No_arvore *no){
 			if(aux->esq)
 				aux->esq->pai = no;
 			aux->pai = no->pai;
-			if(no->pai){
-				if(no->pai->esq == no)
-					no->pai->esq = aux;
-				else
-					no->pai->dir = aux;
-			}
+			if(!no->pai)
+				pt_raiz = aux;
+			else if(no->pai->esq == no)
+				no->pai->esq = aux;
+			else
+				no->pai->dir = aux;
 			aux->esq = no;
-			no = aux;
+			no->pai = aux;
 		}
 	}
 }
 
-void reparacao(No_arvore *&no){
+void reparacao_insercao(No_arvore *&no, No_arvore *&pt_raiz){
 	No_arvore *x = no;
 	if(x->pai){
 		if(x->pai->pai){
@@ -158,11 +155,11 @@ void reparacao(No_arvore *&no){
 					}
 					else{
 						if(x == x->pai->dir){			//Caso 2
-							rotacao_esquerda(x->pai);
+							rotacao_esquerda(x->pai, pt_raiz);
 							x = x->esq;
 						}
 						else{							//Caso 3
-							rotacao_direita(x->pai->pai);
+							rotacao_direita(x->pai->pai, pt_raiz);
 							x->pai->cor = 'P';
 							x->pai->dir->cor = 'V';
 						}
@@ -177,13 +174,13 @@ void reparacao(No_arvore *&no){
 					}
 					else{
 						if(x == x->pai->dir){			//Caso 2
-							rotacao_direita(x->pai);
-							x = x->dir;
-						}
-						else{							//Caso 3
-							rotacao_esquerda(x->pai->pai);
+							rotacao_esquerda(x->pai->pai, pt_raiz);
 							x->pai->cor = 'P';
 							x->pai->esq->cor = 'V';
+						}
+						else{							//Caso 3
+							rotacao_direita(x->pai, pt_raiz);
+							x = x->dir;
 						}
 					}
 				}
@@ -196,8 +193,66 @@ void reparacao(No_arvore *&no){
 	}
 }
 
+void reparacao_remocao(No_arvore *&no, No_arvore *&pt_raiz){
+	No_arvore *z = no;
+	while(z != pt_raiz && z->cor == 'P'){
+		if(z->chave < z->pai->chave){
+			No_arvore *w = z->pai->dir;
+			if(w->cor == 'V'){
+				w->cor = 'P';
+				z->pai->cor = 'V';
+				rotacao_esquerda(z->pai, pt_raiz);
+				w = z->pai->dir;
+			}
+			if((!w->esq || w->esq->cor == 'P') && (!w->dir || w->dir->cor == 'P')){
+				w->cor = 'V';
+				z = z->pai;
+			}
+			else if(w->dir->cor = 'P'){
+				if(w->esq)
+					w->esq->cor = 'P';
+				w->cor = 'V';
+				rotacao_direita(w, pt_raiz);
+				w = z->pai->dir;
+				w->cor = z->pai->cor;
+				z->pai->cor = 'P';
+				if(w->dir)
+					w->dir->cor = 'P';
+				rotacao_esquerda(z->pai, pt_raiz);
+				z = pt_raiz;
+			}
+		}
+		else{
+			No_arvore *w = z->pai->esq;
+			if(w->cor == 'V'){
+				w->cor = 'P';
+				z->pai->cor = 'V';
+				rotacao_direita(z->pai, pt_raiz);
+				w = z->pai->esq;
+			}
+			if((!w->esq || w->esq->cor == 'P') && (!w->dir || w->dir->cor == 'P')){
+				w->cor = 'V';
+				z = z->pai;
+			}
+			else if(w->esq->cor = 'P'){
+				if(w->dir)
+					w->esq->cor = 'P';
+				w->cor = 'V';
+				rotacao_direita(w, pt_raiz);
+				w = z->pai->esq;
+				w->cor = z->pai->cor;
+				z->pai->cor = 'P';
+				if(w->dir)
+					w->dir->cor = 'P';
+				rotacao_esquerda(z->pai, pt_raiz);
+				z = pt_raiz;
+			}
+		}
+	}
+	z->cor = 'P';
+}
+
 void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em uma árvore
-	Pilha<No_arvore*> *pilha_altura  = criar_pilha<No_arvore*>();
 	int f;
 	No_arvore *pt = pt_raiz;
 	while(pt){
@@ -206,9 +261,7 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 			break;
 		}
 		else{
-			empilhar<No_arvore*>(pilha_altura, pt);
 			if(x < pt->chave){
-//				pt->nos_esquerda += 1;
 				if(!pt->esq)
 					f = 2;
 				else{
@@ -216,7 +269,6 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 				}
 			}
 			else{
-//				pt->nos_direita += 1;
 				if(!pt->dir)
 					f = 3;
 				else{
@@ -237,7 +289,6 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 			}
 			else{
 				if(x < pt->chave){
-//					pt->nos_esquerda -= 1;
 					if(!pt->esq)
 						f = 2;
 					else{
@@ -245,7 +296,6 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 					}
 				}
 				else{
-//					pt->nos_direita -= 1;
 					if(!pt->dir)
 						f = 3;
 					else{
@@ -259,32 +309,11 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 	}
 	else{
 		No_arvore *no_atual;
-/*		while(desempilhar(pilha_altura, &no_atual)){
-			if(no_atual->dir){
-				if(no_atual->esq){
-					if(no_atual->dir->altura > no_atual->esq->altura)
-						no_atual->altura = no_atual->dir->altura + 1;
-					else
-						no_atual->altura = no_atual->esq->altura + 1;
-				}
-				else
-					no_atual->altura = no_atual->dir->altura + 1;
-			}
-			else{
-				if(no_atual->esq)
-					no_atual->altura = no_atual->esq->altura + 1;
-				else
-					no_atual->altura += 1;
-			}
-		}
-*/		No_arvore *pt1 = new No_arvore;
+		No_arvore *pt1 = new No_arvore;
 		pt1->chave = x;
 		pt1->dir = NULL;
 		pt1->esq = NULL;
 		pt1->pai = NULL;
-		pt1->nos_pretos_direita = 0;
-		pt1->nos_pretos_esquerda = 0;
-		pt1->altura_nos_pretos = 1;
 		pt1->cor = 'V';
 		if(f == 0){
 			pt1->cor = 'P';
@@ -298,7 +327,155 @@ void insercao(int x, No_arvore *&pt_raiz){				//Função que insere um elemento em
 			pt1->pai = pt;
 			pt->dir = pt1;
 		}
-		reparacao(pt1);
+		reparacao_insercao(pt1, pt_raiz);
+	}
+}
+
+void remocao(int x, No_arvore *&pt_raiz){				//Função que remove um elemento de uma árvore
+	int f = 0;
+	No_arvore *pt = pt_raiz;
+	No_arvore *pai = pt_raiz;
+	while(pt){
+		if(pt->chave == x){
+			f = 1;
+			break;
+		}
+		else{
+			if(x < pt->chave){
+				if(!pt->esq)
+					f = 2;
+				else{
+					pt = pt->esq;
+				}
+			}
+			else{
+				if(!pt->dir)
+					f = 3;
+				else{
+					pt = pt->dir;
+				}
+			}
+			if(f > 1)
+				break;
+		}
+	}
+	
+	if(f != 1){
+		cout << "Elemento não existe" << endl;
+		pt = pt_raiz;
+		while(pt){
+			if(pt->chave == x){
+				f = 1;
+				break;
+			}
+			else{
+				if(x < pt->chave){
+					if(!pt->esq)
+						f = 2;
+					else{
+						pt = pt->esq;
+					}
+				}
+				else{
+					if(!pt->dir)
+						f = 3;
+					else{
+						pt = pt->dir;
+					}
+				}
+				if(f > 1)
+					break;
+			}
+		}
+	}
+	else{
+		f = 0;
+		if(pai->chave == x)
+			pai = NULL;
+		else{
+			while(pai){
+				if(x < pai->chave){
+					if(pai->esq){
+						if(pai->esq->chave == x){
+							f = 2;
+							break;
+						}
+						else
+							pai = pai->esq;
+					}
+				}
+				else{
+					if(pai->dir){
+						if(pai->dir->chave == x){
+							f = 3;
+							break;
+						}
+						else
+							pai = pai->dir;
+					}
+				}
+			}
+		}
+		if(!pt->esq){
+			if(!pt->dir){
+				if(f == 0)
+					pt_raiz = NULL;
+				else if(f == 2)
+					pai->esq = NULL;
+				else
+					pai->dir = NULL;
+			}
+			else{
+				if(f == 0)
+					pt_raiz = pt_raiz->dir;
+				else if(f == 2)
+					pai->esq = pt->dir;
+				else
+					pai->dir = pt->dir;
+			}
+			if(pt->cor == 'P'){
+				reparacao_remocao(pt, pt_raiz);
+			}
+		}
+		else{
+			if(!pt->dir){
+				if(f == 0)
+					pt_raiz = pt_raiz->esq;
+				else if(f == 2)
+					pai->esq = pt->esq;
+				else
+					pai->dir = pt->esq;
+					
+				if(pt->cor == 'P'){
+					reparacao_remocao(pt, pt_raiz);
+				}
+			}
+			else{
+				No_arvore *pt1 = pt->esq;
+				if(pt1->dir){
+					while(pt1->dir){
+						pt1 = pt1->dir; 
+					}
+					pt1->pai->dir = pt1->esq;
+					pt1->dir = pt->dir;
+					pt1->esq = pt->esq;
+				}
+				else{
+					pt1->dir = pt->dir;
+				}
+				if(f == 0)
+					pt_raiz = pt1;
+				else if(f == 2)
+					pai->esq = pt1;
+				else
+					pai->dir = pt1;
+				
+				if(pt1->cor == 'P'){
+					reparacao_remocao(pt1, pt_raiz);
+				}
+				pt1->cor = pt->cor;
+			}
+		}
 	}
 }
 
@@ -353,7 +530,6 @@ void construir_arvore(No_arvore *&pt_raiz){				//Função que constrói a ABB a por
 	int num;
 	while(desenfileirar(fila_insercao, &num)){
 		insercao(num, pt_raiz);
-		cout << toString(pt_raiz) << endl;
 	}
 }
 
@@ -361,6 +537,8 @@ int main(){
 	No_arvore *pt_raiz = NULL;
 	construir_arvore(pt_raiz);
 	//executar_operacores(pt_raiz);
+	cout << toString(pt_raiz) << endl;
+	remocao(12, pt_raiz);
 	cout << toString(pt_raiz) << endl;
 	return 0;
 }
