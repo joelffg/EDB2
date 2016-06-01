@@ -598,8 +598,13 @@ void executar_operacores(No_arvore *&pt_raiz){			//Função que executa as operaçõ
     		found = operacao.find_first_of(" ");
     		string comando = operacao.substr(0, found), str_num = operacao.substr(found+1);
 			num = stoi(str_num, nullptr, 10);
-			if(comando == "BUSCA")
-				cout << busca_arn(pt_raiz, num, &f) << endl;
+			if(comando == "BUSCA"){
+				int busca = busca_arn(pt_raiz, num, &f)->chave;
+				if(f != 1)
+					cout << "O elemento buscado não existe na árvore" << endl;
+				else
+					cout << busca << endl;		
+			}
 			else if(comando == "REMOVA")
 				remocao(num, pt_raiz);
 			else
